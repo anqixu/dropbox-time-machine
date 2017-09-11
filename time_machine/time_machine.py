@@ -1,4 +1,4 @@
-#!/Users/rick/envs/dropbox/bin/python
+#!/usr/bin/env python
 
 import os
 import dropbox

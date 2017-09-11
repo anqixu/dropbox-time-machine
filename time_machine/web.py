@@ -78,7 +78,7 @@ def list_dropbox(context, path=''):
     try:
         tm = time_machine.TimeMachine(context['dropbox_session'])
         context['account'] = tm.account_info()
-    except dropbox.rest.ErrorResponse exception:
+    except dropbox.rest.ErrorResponse as exception:
         if exception.status in (401, 403):
             return flask.redirect(flask.url_for('authenticate'))
         else:
