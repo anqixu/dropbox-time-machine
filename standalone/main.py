@@ -1,47 +1,30 @@
 #!/usr/bin/env python3
 
-# Include the Dropbox SDK
+# See v2 tutorial and docs: https://www.dropbox.com/developers/documentation/python#tutorial
+
 import dropbox
+import os
+import sys
 
 import settings
-
-# Get your app key and secret from the Dropbox developer website
 app_key = settings.APP_KEY
 app_secret = settings.APP_SECRET
 
-flow = dropbox.client.DropboxOAuth2FlowNoRedirect(app_key, app_secret)
+dbx = dropbox.Dropbox(settings.SECRET_KEY)
+#print('get_current_account:', dbx.users_get_current_account())
 
-# Have the user sign in and authorize this token
-if False:
-  authorize_url = flow.start()
-  print('1. Go to: ' + authorize_url)
-  print('2. Click "Allow" (you might have to log in first)')
-  print('3. Copy the authorization code.')
-  code = raw_input("Enter the authorization code here: ").strip()
-
-  # This will fail if the user enters an invalid authorization code
-  access_token, user_id = flow.finish(code)
-else
-  access_token = settings.SECRET_KEY
-end
-
-client = dropbox.client.DropboxClient(access_token)
-print('linked account: ', client.account_info())
-
-"""
-f = open('working-draft.txt', 'rb')
-response = client.put_file('/magnum-opus.txt', f)
-print 'uploaded: ', response
-
-folder_metadata = client.metadata('/')
-print 'metadata: ', folder_metadata
-
-f, metadata = client.get_file_and_metadata('/magnum-opus.txt')
-out = open('magnum-opus.txt', 'wb')
-out.write(f.read())
-out.close()
-print metadata
-"""
-
-folder_metadata = client.metadata('/')
-print('metadata: ', folder_metadata)
+deleted_count = 0
+for entry in dbx.files_list_folder(path='/SCRIPTS/', recursive=True, include_deleted=True).entries:
+  if isinstance(entry, dropbox.files.DeletedMetadata):
+    if entry.name.find('conflicted copy') >= 0:
+      continue
+    if entry.name[-1] == '~':
+      continue
+    if entry.name == 'untitled document' or entry.name == 'new text document.txt':
+      continue
+    _, ext = os.path.splitext(entry.name)
+    if ext == '.pyc':
+      continue
+    print(entry.path_display)
+    deleted_count += 1
+sys.stderr.write('Total deleted files found: %d\n' % deleted_count)
